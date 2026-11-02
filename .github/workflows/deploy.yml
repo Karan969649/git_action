@@ -13,14 +13,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Copy files to EC2
+      - name: Check Files
+        run: ls -la
+
+      - name: Create EC2 Folder
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            mkdir -p /home/ubuntu/website
+
+      - name: Copy Files to EC2
         uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           source: "Dockerfile,index.html"
-          target: "/home/ubuntu/website"
+          target: "/home/ubuntu/website/"
 
       - name: Deploy Docker Container
         uses: appleboy/ssh-action@v1
@@ -30,6 +42,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd /home/ubuntu/website
+            ls -la
             sudo docker build -t mywebsite .
             sudo docker stop mywebsite || true
             sudo docker rm mywebsite || true
